@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pepina Pastel · Atención</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap">
+<style>
+/* Layout: three-pane helpdesk (nav rail · ticket list · conversation · customer card), collapsing to one pane on phones */
+:root{
+  --bg:#F6F1EA; --surface:#FFFFFF; --surface-2:#FBF7F2; --line:#E9DFD3; --line-2:#F2EBE2;
+  --ink:#33251A; --muted:#7D6E61; --faint:#A99A8C;
+  --brown:#714B28; --brown-ink:#FFFFFF; --brown-soft:#F3E9DE; --brown-mid:#A47A52;
+  --sage:#899E9A; --sage-d:#5F7672; --sage-soft:#E3EAE8;
+  --note:#FFF6DC; --note-line:#D9BE7A; --note-ink:#6E5A26;
+  --agent-bubble:#714B28; --agent-ink:#FFFFFF;
+  --wa:#3F6B4E; --wa-bg:#E3EEE6; --mail:#714B28; --mail-bg:#F3E9DE; --ig:#8A4A60; --ig-bg:#F2E6EA; --fb:#45597E; --fb-bg:#E4E9F2;
+  --ok:#4E7A5A; --warn:#B07A2A; --shadow:0 18px 50px rgba(51,37,26,.18);
+  --font:'Poppins',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#1C1713; --surface:#26201B; --surface-2:#2D2620; --line:#3D342C; --line-2:#332B24;
+  --ink:#F1E8DE; --muted:#B5A595; --faint:#8B7C6F;
+  --brown:#C69567; --brown-ink:#1C1713; --brown-soft:#3A2D22; --brown-mid:#C69567;
+  --sage:#8FA6A1; --sage-d:#A9C0BB; --sage-soft:#2A3331;
+  --note:#3A321D; --note-line:#8A743C; --note-ink:#EAD59C;
+  --agent-bubble:#5A3D23; --agent-ink:#F7EDE3;
+  --wa:#9CCBA9; --wa-bg:#243229; --mail:#E0B98F; --mail-bg:#3A2D22; --ig:#E3A6BC; --ig-bg:#3A2830; --fb:#A9BCE0; --fb-bg:#262D3A;
+  --ok:#9CCBA9; --warn:#E3B56E; --shadow:0 18px 50px rgba(0,0,0,.5); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1C1713; --surface:#26201B; --surface-2:#2D2620; --line:#3D342C; --line-2:#332B24;
+  --ink:#F1E8DE; --muted:#B5A595; --faint:#8B7C6F;
+  --brown:#C69567; --brown-ink:#1C1713; --brown-soft:#3A2D22; --brown-mid:#C69567;
+  --sage:#8FA6A1; --sage-d:#A9C0BB; --sage-soft:#2A3331;
+  --note:#3A321D; --note-line:#8A743C; --note-ink:#EAD59C;
+  --agent-bubble:#5A3D23; --agent-ink:#F7EDE3;
+  --wa:#9CCBA9; --wa-bg:#243229; --mail:#E0B98F; --mail-bg:#3A2D22; --ig:#E3A6BC; --ig-bg:#3A2830; --fb:#A9BCE0; --fb-bg:#262D3A;
+  --ok:#9CCBA9; --warn:#E3B56E; --shadow:0 18px 50px rgba(0,0,0,.5); color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--brown-mid);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+
+.app{height:100%;display:grid;grid-template-columns:68px minmax(0,340px) minmax(0,1fr) 270px;grid-template-rows:auto minmax(0,1fr);
+  padding-left:max(0px, env(safe-area-inset-left,0px));padding-right:max(0px, env(safe-area-inset-right,0px))}
+.demo-bar{grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;background:var(--sage-d);color:#fff;font-size:12px;padding-block:6px;padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px));text-align:center}
+:root[data-theme="dark"] .demo-bar{color:#1C1713}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .demo-bar{color:#1C1713}}
+
+/* nav rail */
+.rail{background:var(--brown);display:flex;flex-direction:column;align-items:center;gap:6px;padding-block:14px}
+:root[data-theme="dark"] .rail{background:#2E2219}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .rail{background:#2E2219}}
+.rail img{width:46px;margin-bottom:12px}
+.rail button{width:44px;height:44px;border-radius:12px;border:0;background:transparent;color:rgba(255,255,255,.72);display:grid;place-items:center}
+.rail button.on{background:rgba(255,255,255,.16);color:#fff}
+.rail button svg{width:22px;height:22px}
+.rail .spacer{flex:1}
+.rail .me{width:36px;height:36px;border-radius:50%;background:var(--sage);color:#fff;display:grid;place-items:center;font-weight:600;font-size:13px;border:2px solid rgba(255,255,255,.5)}
+
+/* list pane */
+.list{background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.list-head{padding:16px 16px 10px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--line-2)}
+.list-title{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.list-title h1{font-size:18px;margin:0;font-weight:600;letter-spacing:-.2px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 12px;font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--brown-mid)}
+.btn.primary{background:var(--brown);border-color:var(--brown);color:var(--brown-ink)}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn svg{width:16px;height:16px}
+.search{display:flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:7px 10px}
+.search input{border:0;background:transparent;outline:none;width:100%;min-width:0}
+.search svg{width:16px;height:16px;color:var(--faint);flex:none}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tab{border:0;background:var(--surface-2);color:var(--muted);border-radius:8px;padding:5px 10px;font-size:12px;font-weight:500}
+.tab.on{background:var(--brown);color:var(--brown-ink)}
+.tab .c{opacity:.75;margin-left:3px}
+.chans{display:flex;gap:6px;flex-wrap:wrap}
+.chf{border:1px solid var(--line);background:transparent;border-radius:999px;padding:3px 9px;font-size:11.5px;color:var(--muted);display:inline-flex;align-items:center;gap:5px}
+.chf svg{width:12px;height:12px}
+.chf.on{border-color:var(--brown-mid);color:var(--ink);background:var(--brown-soft)}
+.rows{overflow:auto;flex:1;min-height:0}
+.row{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line-2);background:transparent;padding:12px 16px 12px 13px;border-left:3px solid transparent}
+.row:hover{background:var(--surface-2)}
+.row.on{background:var(--brown-soft);border-left-color:var(--brown)}
+.row .l1{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.row .who{font-weight:600;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .when{font-size:11.5px;color:var(--faint);flex:none}
+.row .ttl{font-size:13px;font-weight:500;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .prev{font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px}
+.row .l3{display:flex;gap:6px;align-items:center;margin-top:7px;flex-wrap:wrap}
+.row .unread{width:8px;height:8px;border-radius:50%;background:var(--brown);display:inline-block}
+.row.is-unread .who,.row.is-unread .ttl{font-weight:600}
+.empty{padding:40px 20px;text-align:center;color:var(--muted);font-size:13px}
+
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.chip svg{width:11px;height:11px}
+.ch-email{background:var(--mail-bg);color:var(--mail)}
+.ch-whatsapp{background:var(--wa-bg);color:var(--wa)}
+.ch-instagram{background:var(--ig-bg);color:var(--ig)}
+.ch-facebook{background:var(--fb-bg);color:var(--fb)}
+.tid{font-size:11.5px;color:var(--faint)}
+.st{font-size:11px;font-weight:500;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.st-open{border-color:var(--brown-mid);color:var(--brown)}
+.st-pending{border-color:var(--warn);color:var(--warn)}
+.st-snoozed{border-color:var(--sage);color:var(--sage-d)}
+.st-resolved{border-color:var(--ok);color:var(--ok)}
+.who-chip{font-size:11px;color:var(--muted)}
+
+/* conversation */
+.conv{display:flex;flex-direction:column;min-height:0;background:var(--surface-2);min-width:0}
+.conv-head{background:var(--surface);border-bottom:1px solid var(--line);padding:12px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.back{display:none;border:0;background:transparent;padding:4px;margin-left:-6px}
+.back svg{width:22px;height:22px}
+.conv-head .meta{min-width:0;flex:1 1 320px}
+.conv-head .name{font-weight:600;font-size:15px}
+.conv-head .sub{font-size:12px;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:2px}
+.conv-head .subject{font-size:12.5px;color:var(--ink);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+select.sel{border:1px solid var(--line);border-radius:10px;padding:7px 10px;background:var(--surface);font-size:13px}
+.btn.res{background:var(--sage-d);border-color:var(--sage-d);color:#fff}
+:root[data-theme="dark"] .btn.res{color:#1C1713}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.res{color:#1C1713}}
+.btn.ghost{border-style:dashed;color:var(--muted)}
+.info-btn{display:none}
+
+.thread{flex:1;overflow:auto;padding:20px 22px;display:flex;flex-direction:column;gap:12px;min-height:0}
+.day{align-self:center;font-size:11.5px;color:var(--faint)}
+.msg{max-width:min(560px,82%);border-radius:16px;padding:10px 14px;font-size:13.5px;white-space:pre-wrap;overflow-wrap:anywhere}
+.msg .t{font-size:11px;margin-top:5px;display:flex;gap:6px;align-items:center}
+.msg.in{align-self:flex-start;background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:5px}
+.msg.in .t{color:var(--faint)}
+.msg.out{align-self:flex-end;background:var(--agent-bubble);color:var(--agent-ink);border-bottom-right-radius:5px}
+.msg.out .t{opacity:.78;justify-content:flex-end}
+.msg.note{align-self:flex-end;background:var(--note);border:1px dashed var(--note-line);color:var(--note-ink);border-radius:12px}
+.msg.note .t{opacity:.85;justify-content:flex-end}
+.msg .mailhead{font-size:12px;border-bottom:1px solid var(--line-2);padding-bottom:6px;margin-bottom:8px;color:var(--muted);white-space:normal}
+.msg.out .mailhead{border-bottom-color:rgba(255,255,255,.22);color:inherit;opacity:.85}
+.msg .mailhead b{color:inherit;font-weight:600}
+.sys{align-self:center;font-size:11.5px;color:var(--muted);background:var(--line-2);padding:4px 11px;border-radius:8px;text-align:center}
+
+.composer{background:var(--surface);border-top:1px solid var(--line);padding:10px 18px 14px}
+.mode{display:flex;gap:4px;margin-bottom:8px}
+.mode button{border:0;background:transparent;color:var(--muted);font-size:12.5px;font-weight:500;padding:5px 10px;border-radius:8px}
+.mode button.on{background:var(--brown-soft);color:var(--brown)}
+.mode button.on.note-on{background:var(--note);color:var(--note-ink)}
+.box{border:1px solid var(--line);border-radius:12px;background:var(--surface);display:flex;flex-direction:column}
+.box.note-mode{background:var(--note);border-color:var(--note-line)}
+.box textarea{border:0;outline:none;background:transparent;resize:none;padding:10px 12px;min-height:64px;width:100%}
+.box .bar{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 8px 8px 10px;flex-wrap:wrap}
+.hint{font-size:11.5px;color:var(--faint)}
+.canned{position:relative}
+.canned-menu{position:absolute;bottom:calc(100% + 6px);left:0;width:min(320px,80vw);background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:6px;z-index:20}
+.canned-menu button{display:block;width:100%;text-align:left;border:0;background:transparent;border-radius:8px;padding:8px 10px}
+.canned-menu button:hover{background:var(--surface-2)}
+.canned-menu b{display:block;font-size:12.5px}
+.canned-menu span{font-size:12px;color:var(--muted)}
+
+/* customer panel */
+.side{background:var(--surface);border-left:1px solid var(--line);padding:20px 18px;overflow:auto;min-height:0}
+.avatar{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;font-weight:600;font-size:19px;color:#fff;background:var(--sage)}
+.side h2{font-size:16px;margin:10px 0 2px;font-weight:600}
+.kv{font-size:12.5px;color:var(--muted);display:flex;flex-direction:column;gap:3px;overflow-wrap:anywhere}
+.lbl{font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--faint);margin:18px 0 8px}
+.tags{display:flex;gap:6px;flex-wrap:wrap}
+.tag{font-size:11.5px;padding:3px 9px;border-radius:999px;background:var(--sage-soft);color:var(--sage-d);font-weight:500}
+.hist{display:flex;flex-direction:column;gap:6px}
+.hist button{border:1px solid var(--line-2);background:var(--surface-2);border-radius:10px;padding:8px 10px;text-align:left;font-size:12.5px;display:flex;flex-direction:column;gap:3px}
+.hist button:hover{border-color:var(--brown-mid)}
+.close-side{display:none}
+
+/* modal */
+.scrim{position:fixed;inset:0;background:rgba(28,23,19,.45);display:grid;place-items:center;z-index:50;padding:16px}
+.modal{background:var(--surface);border-radius:18px;box-shadow:var(--shadow);width:min(520px,100%);max-height:100%;overflow:auto;padding:22px 22px 18px}
+.modal h3{margin:0 0 4px;font-size:18px}
+.modal p.sub{margin:0 0 14px;color:var(--muted);font-size:13px}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.field label{font-size:12.5px;font-weight:500}
+.field input,.field textarea,.field select{border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:var(--surface-2);outline:none;width:100%;min-width:0}
+.field input:focus,.field textarea:focus{border-color:var(--brown-mid)}
+.chpick{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.chpick button{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 4px;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px}
+.chpick button svg{width:18px;height:18px}
+.chpick button.on{border-color:var(--brown);background:var(--brown-soft)}
+.err{color:#B4442E;font-size:12px;min-height:16px}
+.modal .foot{display:flex;justify-content:flex-end;gap:8px;margin-top:6px}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:13px;z-index:60;box-shadow:var(--shadow);max-width:calc(100% - 32px)}
+
+/* responsive */
+@media (max-width:1180px){
+  .app{grid-template-columns:68px minmax(0,320px) minmax(0,1fr)}
+  .side{position:fixed;right:0;top:0;bottom:0;width:min(300px,88vw);z-index:40;box-shadow:var(--shadow);padding-top:calc(20px + env(safe-area-inset-top,0px));padding-right:max(18px, env(safe-area-inset-right,0px))}
+  .side:not(.open){display:none}
+  .info-btn{display:inline-flex}
+  .close-side{display:inline-flex;float:right}
+}
+@media (max-width:760px){
+  .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr)}
+  .rail{flex-direction:row;padding:8px 12px;padding-left:max(12px, env(safe-area-inset-left,0px));padding-right:max(12px, env(safe-area-inset-right,0px))}
+  .rail img{width:34px;margin:0 8px 0 0}
+  .rail button{width:38px;height:38px}
+  .list,.conv{grid-column:1;grid-row:3}
+  .app.show-conv .list{display:none}
+  .app:not(.show-conv) .conv{display:none}
+  .back{display:inline-flex}
+  .thread{padding:14px}
+  .composer{padding:10px 12px calc(12px + env(safe-area-inset-bottom,0px))}
+  .msg{max-width:90%}
+  .actions{width:100%}
+}
+@media (prefers-reduced-motion:no-preference){
+  .msg,.sys{animation:pop .18s ease-out}
+  @keyframes pop{from{transform:translateY(4px);opacity:.4}to{transform:none;opacity:1}}
+}
+</style>
+</head>
+<body>
+
+
+<div class="app" id="app">
+  <div class="demo-bar">Demo de Pepina Pastel · datos de ejemplo, los mensajes no se envían de verdad</div>
+
+  <nav class="rail" aria-label="Menú principal">
+    <img src="data:image/png;base64,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" alt="Pepina Pastel">
+    <button class="on" title="Conversaciones" aria-label="Conversaciones"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16v11H8l-4 4z"/></svg></button>
+    <button title="Clientes" aria-label="Clientes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/></svg></button>
+    <button title="Informes" aria-label="Informes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg></button>
+    <div class="spacer"></div>
+    <div class="me" title="Marta (administradora)">M</div>
+  </nav>
+
+  <section class="list" aria-label="Lista de conversaciones">
+    <div class="list-head">
+      <div class="list-title">
+        <h1>Conversaciones</h1>
+        <button class="btn primary" id="newBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Nuevo ticket</button>
+      </div>
+      <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input id="q" type="search" placeholder="Buscar nombre, asunto o nº" aria-label="Buscar"></label>
+      <div class="tabs" id="tabs" role="tablist"></div>
+      <div class="chans" id="chans"></div>
+    </div>
+    <div class="rows" id="rows"></div>
+  </section>
+
+  <main class="conv" id="conv"></main>
+  <aside class="side" id="side" aria-label="Ficha del cliente"></aside>
+</div>
+
+<div class="scrim" id="scrim" hidden>
+  <form class="modal" id="form" novalidate>
+    <h3>Nuevo ticket</h3>
+    <p class="sub">Registra una consulta o escribe tú primero a un cliente.</p>
+    <div class="field"><label>Canal</label><div class="chpick" id="chpick"></div></div>
+    <div class="field"><label for="f-name">Nombre del cliente</label><input id="f-name" autocomplete="off" placeholder="Por ejemplo, Ana López"></div>
+    <div class="field"><label for="f-contact" id="f-contact-l">Email</label><input id="f-contact" autocomplete="off" placeholder="ana@ejemplo.com"></div>
+    <div class="field" id="f-subject-w"><label for="f-subject">Asunto</label><input id="f-subject" autocomplete="off" placeholder="Por ejemplo, Tarta de comunión"></div>
+    <div class="field"><label for="f-msg">Mensaje del cliente</label><textarea id="f-msg" rows="3" placeholder="Lo que os ha preguntado"></textarea></div>
+    <div class="field"><label for="f-agent">Asignar a</label><select id="f-agent"></select></div>
+    <div class="err" id="f-err" role="alert"></div>
+    <div class="foot"><button type="button" class="btn" id="cancelBtn">Cancelar</button><button type="submit" class="btn primary">Crear ticket</button></div>
+  </form>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const ICON = {
+  email:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>',
+  whatsapp:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z"/></svg>',
+  instagram:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/></svg>',
+  facebook:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3.5c-4.9 0-8.5 3.5-8.5 8 0 2.5 1.1 4.6 3 6v3l2.8-1.5c.9.2 1.8.4 2.7.4 4.9 0 8.5-3.5 8.5-8s-3.6-7.9-8.5-7.9z"/></svg>',
+  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 5l-7 7 7 7"/></svg>',
+  info:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/></svg>',
+  check:'<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m4 12 5 5L20 6"/></svg>'
+};
+const CH = {email:'Email', whatsapp:'WhatsApp', instagram:'Instagram', facebook:'Facebook'};
+const ST = {open:'Abierto', pending:'Pendiente', snoozed:'Pospuesto', resolved:'Resuelto'};
+const AGENTS = ['Marta','Lucía','Andrés'];
+const ME = 'Marta';
+const CANNED = [
+  {k:'Horario', t:'Nuestro horario es de lunes a sábado, de 9:00 a 14:00 y de 17:00 a 20:30. Los domingos abrimos de 9:00 a 14:00.'},
+  {k:'Alérgenos', t:'Todas nuestras tartas indican sus alérgenos. Tenemos opciones sin gluten (chocolate y limón) y sin lactosa bajo encargo con 48 horas de antelación.'},
+  {k:'Encargos', t:'Para encargos de tartas personalizadas necesitamos al menos 72 horas de antelación y una señal del 30 %. ¿Para qué fecha y cuántas personas sería?'},
+];
+const AV_COLORS = ['#899E9A','#A47A52','#5F7672','#8A6A8E','#6E8A5A','#B07A54'];
+
+let nextId = 1031;
+let tickets = [
+  {id:1030, channel:'whatsapp', status:'open', agent:'Marta', unread:true, when:'10:42',
+   contact:{name:'Carmen Ruiz', phone:'+34 612 345 678', email:'carmen.ruiz@ejemplo.com'}, labels:['Sin gluten','Cliente habitual'],
+   history:[1012, 1005],
+   msgs:[
+    {k:'in', text:'¡Hola! ¿Tenéis tarta sin gluten para el sábado? Seríamos 8 😊', t:'10:42'},
+   ]},
+  {id:1029, channel:'email', status:'open', agent:'Lucía', unread:true, when:'10:15',
+   subject:'Tarta para cumpleaños de 20 personas',
+   contact:{name:'Laura Gómez', email:'laura.gomez@ejemplo.com', phone:''}, labels:['Encargo'],
+   history:[],
+   msgs:[
+    {k:'in', text:'Hola,\n\nQuería encargar una tarta para un cumpleaños de 20 personas para el sábado 14 de noviembre. Nos gustaría algo con frutos rojos. ¿Qué opciones tenéis y qué precio tendría?\n\nGracias,\nLaura', t:'10:15'},
+   ]},
+  {id:1028, channel:'instagram', status:'open', agent:'Andrés', unread:false, when:'09:58',
+   contact:{name:'@dulce.ana', email:'', phone:''}, labels:[],
+   history:[],
+   msgs:[
+    {k:'in', text:'Holaa, ¿qué precio tiene la tarta de frambuesa que habéis subido hoy? 😍', t:'09:51'},
+    {k:'out', text:'¡Hola Ana! La de frambuesa y pistacho cuesta 32 € (8 raciones). ¿Quieres que te la reservemos?', t:'09:58', by:'Andrés'},
+   ]},
+  {id:1027, channel:'email', status:'pending', agent:'Marta', unread:false, when:'Ayer',
+   subject:'Pedido nº 2045: cambio de fecha de recogida',
+   contact:{name:'Javier Martín', email:'javier.martin@ejemplo.com', phone:'+34 655 210 984'}, labels:['Pedido'],
+   history:[1009],
+   msgs:[
+    {k:'in', text:'Buenas tardes,\n\nTengo el pedido nº 2045 para recoger el jueves. ¿Sería posible pasarlo al viernes por la mañana?\n\nUn saludo,\nJavier', t:'Ayer 18:20'},
+    {k:'out', text:'Hola Javier,\n\nLo consultamos con el obrador y te confirmamos mañana a primera hora.\n\nUn saludo,\nMarta · Pepina Pastel', t:'Ayer 18:41', by:'Marta'},
+    {k:'note', text:'Preguntar a Rosa si el viernes hay hueco en el horno para la de 3 pisos.', t:'Ayer 18:42', by:'Marta'},
+   ]},
+  {id:1026, channel:'whatsapp', status:'snoozed', agent:'Lucía', unread:false, when:'Ayer',
+   contact:{name:'Pedro Alonso', phone:'+34 699 874 112', email:''}, labels:[],
+   history:[],
+   msgs:[
+    {k:'in', text:'Hola, ¿hacéis envíos a domicilio en Valencia ciudad?', t:'Ayer 12:05'},
+    {k:'out', text:'¡Hola Pedro! Sí, repartimos en Valencia ciudad de martes a sábado. El envío cuesta 6 € y es gratis en pedidos de más de 40 €. ¿Te paso la carta?', t:'Ayer 12:11', by:'Lucía'},
+    {k:'sys', text:'Lucía ha pospuesto la conversación hasta que el cliente responda'},
+   ]},
+  {id:1025, channel:'facebook', status:'resolved', agent:'Andrés', unread:false, when:'Lun',
+   contact:{name:'Isabel Navarro', email:'', phone:''}, labels:[],
+   history:[],
+   msgs:[
+    {k:'in', text:'¿Abrís el domingo por la mañana?', t:'Lun 20:14'},
+    {k:'out', text:'¡Hola Isabel! Sí, los domingos abrimos de 9:00 a 14:00. ¡Te esperamos!', t:'Lun 20:30', by:'Andrés'},
+    {k:'sys', text:'Andrés ha marcado la conversación como resuelta'},
+   ]},
+  {id:1024, channel:'email', status:'resolved', agent:'Marta', unread:false, when:'Lun',
+   subject:'Factura del pedido de la comunión',
+   contact:{name:'Elena Sanz', email:'elena.sanz@ejemplo.com', phone:''}, labels:['Factura'],
+   history:[],
+   msgs:[
+    {k:'in', text:'Hola, ¿me podéis enviar la factura del pedido del sábado? Necesito que salga a nombre de la empresa.\n\nGracias,\nElena', t:'Lun 11:02'},
+    {k:'out', text:'Hola Elena,\n\nTe adjuntamos la factura a nombre de tu empresa. Cualquier cosa, aquí estamos.\n\nUn saludo,\nMarta · Pepina Pastel', t:'Lun 11:30', by:'Marta'},
+    {k:'sys', text:'Marta ha marcado la conversación como resuelta'},
+   ]},
+];
+const OLD = {
+  1012:{channel:'email', title:'Tarta de cumpleaños de chocolate', when:'Mayo'},
+  1005:{channel:'instagram', title:'Pregunta por los macarons', when:'Marzo'},
+  1009:{channel:'whatsapp', title:'Encargo de roscón', when:'Enero'},
+};
+
+const state = {sel:1030, tab:'open', chans:new Set(), q:'', mode:'reply', showSide:false, newCh:'email'};
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const now = () => { const d=new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); };
+const initials = n => n.replace('@','').split(/[\s._]+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');
+const avColor = n => AV_COLORS[[...n].reduce((a,c)=>a+c.charCodeAt(0),0)%AV_COLORS.length];
+const chip = ch => `<span class="chip ch-${ch}">${ICON[ch]}${CH[ch]}</span>`;
+const titleOf = t => t.channel==='email' ? t.subject : (t.msgs.find(m=>m.k==='in')?.text || 'Nueva conversación');
+const lastText = t => { const m=[...t.msgs].reverse().find(m=>m.k==='in'||m.k==='out'); return m ? (m.k==='out' ? 'Tú: ' : '') + m.text.replace(/\s+/g,' ') : ''; };
+const get = id => tickets.find(t=>t.id===id);
+
+function toast(msg){ const el=$('#toast'); el.textContent=msg; el.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>el.hidden=true,2600); }
+
+function filtered(){
+  const q=state.q.trim().toLowerCase();
+  return tickets.filter(t => (state.tab==='all' || t.status===state.tab)
+    && (!state.chans.size || state.chans.has(t.channel))
+    && (!q || [t.contact.name, t.subject, '#'+t.id, String(t.id), titleOf(t)].some(v => (v||'').toLowerCase().includes(q))));
+}
+
+function renderTabs(){
+  const counts = {open:0,pending:0,snoozed:0,resolved:0};
+  tickets.forEach(t=>counts[t.status]++);
+  const tabs = [['open','Abiertos'],['pending','Pendientes'],['snoozed','Pospuestos'],['resolved','Resueltos'],['all','Todos']];
+  $('#tabs').innerHTML = tabs.map(([k,l]) => `<button class="tab ${state.tab===k?'on':''}" role="tab" aria-selected="${state.tab===k}" data-tab="${k}">${l}<span class="c num">${k==='all'?tickets.length:counts[k]}</span></button>`).join('');
+  $('#chans').innerHTML = Object.keys(CH).map(c => `<button class="chf ${state.chans.has(c)?'on':''}" data-ch="${c}" aria-pressed="${state.chans.has(c)}">${ICON[c]}${CH[c]}</button>`).join('');
+}
+
+function renderRows(){
+  const list = filtered();
+  $('#rows').innerHTML = list.length ? list.map(t => `
+    <button class="row ${t.id===state.sel?'on':''} ${t.unread?'is-unread':''}" data-id="${t.id}">
+      <div class="l1"><span class="who">${t.unread?'<span class="unread" aria-label="Sin leer"></span> ':''}${esc(t.contact.name)}</span><span class="when num">${esc(t.when)}</span></div>
+      <div class="ttl">${esc(titleOf(t))}</div>
+      <div class="prev">${esc(lastText(t))}</div>
+      <div class="l3">${chip(t.channel)}<span class="tid num">#${t.id}</span><span class="st st-${t.status}">${ST[t.status]}</span><span class="who-chip">· ${esc(t.agent)}</span></div>
+    </button>`).join('') : `<div class="empty">No hay conversaciones con estos filtros.</div>`;
+}
+
+function msgHtml(t,m){
+  if(m.k==='sys') return `<div class="sys">${esc(m.text)}</div>`;
+  if(m.k==='note') return `<div class="msg note"><b style="font-size:11.5px">Nota interna · no la ve el cliente</b>\n${esc(m.text)}<div class="t">${esc(m.by)} · ${esc(m.t)}</div></div>`;
+  let head='';
+  if(t.channel==='email'){
+    head = m.k==='in'
+      ? `<div class="mailhead">De: <b>${esc(t.contact.name)}</b> &lt;${esc(t.contact.email)}&gt;<br>Asunto: <b>${esc(t.subject)}</b></div>`
+      : `<div class="mailhead">Para: <b>${esc(t.contact.email)}</b><br>Asunto: <b>Re: ${esc(t.subject)}</b></div>`;
+  }
+  const meta = m.k==='out' ? `${esc(m.by)} · ${esc(m.t)} ${ICON.check} ${m.via?'Enviado por '+CH[t.channel]:''}` : esc(m.t);
+  return `<div class="msg ${m.k}">${head}${esc(m.text)}<div class="t">${meta}</div></div>`;
+}
+
+function renderConv(){
+  const t = get(state.sel);
+  if(!t){ $('#conv').innerHTML = `<div class="empty" style="margin:auto">Elige una conversación de la lista.</div>`; $('#side').innerHTML=''; return; }
+  const sub = t.channel==='email' ? `<div class="subject">${esc(t.subject)}</div>` : '';
+  const isClosed = t.status==='resolved';
+  $('#conv').innerHTML = `
+    <div class="conv-head">
+      <button class="back" id="backBtn" aria-label="Volver a la lista">${ICON.back}</button>
+      <div class="meta">
+        <div class="name">${esc(t.contact.name)}</div>
+        ${sub}
+        <div class="sub">${chip(t.channel)}<span class="num">Ticket #${t.id}</span><span class="st st-${t.status}">${ST[t.status]}</span></div>
+      </div>
+      <div class="actions">
+        <label class="sr" style="font-size:12px;color:var(--muted)" for="agentSel">Asignado a</label>
+        <select class="sel" id="agentSel">${AGENTS.map(a=>`<option ${a===t.agent?'selected':''}>${a}</option>`).join('')}</select>
+        <select class="sel" id="statusSel" aria-label="Estado">${Object.entries(ST).map(([k,l])=>`<option value="${k}" ${k===t.status?'selected':''}>${l}</option>`).join('')}</select>
+        ${isClosed ? `<button class="btn" id="reopenBtn">Reabrir</button>` : `<button class="btn res" id="resolveBtn">${ICON.check} Resolver</button>`}
+        <button class="btn ghost" id="simBtn" title="Simula que el cliente vuelve a escribir">Simular respuesta del cliente</button>
+        <button class="btn info-btn" id="infoBtn" aria-label="Ver ficha del cliente">${ICON.info}Cliente</button>
+      </div>
+    </div>
+    <div class="thread" id="thread">${t.msgs.map(m=>msgHtml(t,m)).join('')}</div>
+    <div class="composer">
+      <div class="mode">
+        <button class="${state.mode==='reply'?'on':''}" data-mode="reply">Responder por ${CH[t.channel]}</button>
+        <button class="${state.mode==='note'?'on note-on':''}" data-mode="note">Nota interna</button>
+      </div>
+      <div class="box ${state.mode==='note'?'note-mode':''}">
+        <textarea id="reply" rows="3" aria-label="Escribe tu respuesta" placeholder="${state.mode==='note' ? 'Solo la verá el equipo' : 'Escribe la respuesta. Le llegará a ' + esc(t.contact.name) + ' por ' + CH[t.channel]}"></textarea>
+        <div class="bar">
+          <div class="canned">
+            <button class="btn" id="cannedBtn" type="button" aria-expanded="false">Respuestas guardadas</button>
+            <div class="canned-menu" id="cannedMenu" hidden>${CANNED.map((c,i)=>`<button type="button" data-canned="${i}"><b>${c.k}</b><span>${esc(c.t.slice(0,70))}…</span></button>`).join('')}</div>
+          </div>
+          <span class="hint">Ctrl + Enter para enviar</span>
+          <button class="btn primary" id="sendBtn">${state.mode==='note' ? 'Guardar nota' : 'Enviar'}</button>
+        </div>
+      </div>
+    </div>`;
+  const th=$('#thread'); th.scrollTop = th.scrollHeight;
+  renderSide(t);
+}
+
+function renderSide(t){
+  const c=t.contact;
+  const prev = t.history.map(id=>OLD[id]).filter(Boolean);
+  const others = tickets.filter(x=>x.id!==t.id && x.contact.name===c.name);
+  $('#side').classList.toggle('open', state.showSide);
+  $('#side').innerHTML = `
+    <button class="btn close-side" id="closeSide" aria-label="Cerrar ficha">Cerrar</button>
+    <div class="avatar" style="background:${avColor(c.name)}">${esc(initials(c.name))}</div>
+    <h2>${esc(c.name)}</h2>
+    <div class="kv">${c.phone?`<span class="num">${esc(c.phone)}</span>`:''}${c.email?`<span>${esc(c.email)}</span>`:''}${!c.phone&&!c.email?`<span>Perfil de ${CH[t.channel]}</span>`:''}</div>
+    <div class="lbl">Etiquetas</div>
+    <div class="tags">${t.labels.length ? t.labels.map(l=>`<span class="tag">${esc(l)}</span>`).join('') : '<span class="kv">Sin etiquetas</span>'}</div>
+    <div class="lbl">Conversaciones anteriores</div>
+    <div class="hist">${(others.map(o=>`<button data-id="${o.id}"><span>${chip(o.channel)} <span class="tid num">#${o.id}</span></span>${esc(titleOf(o))}</button>`).join('') + prev.map((p,i)=>`<button disabled><span>${chip(p.channel)} <span class="tid num">#${t.history[i]}</span> · ${p.when}</span>${esc(p.title)}</button>`).join('')) || '<span class="kv">Es su primera conversación</span>'}</div>
+    <div class="lbl">Responsable</div>
+    <div class="kv">${esc(t.agent)}</div>`;
+}
+
+function render(){ renderTabs(); renderRows(); renderConv(); }
+
+function send(){
+  const t=get(state.sel); const box=$('#reply'); const text=box.value.trim();
+  if(!text){ box.focus(); toast('Escribe algo antes de enviar'); return; }
+  if(state.mode==='note'){
+    t.msgs.push({k:'note', text, t:now(), by:ME});
+    toast('Nota guardada. El cliente no la ve');
+  } else {
+    t.msgs.push({k:'out', text, t:now(), by:ME, via:true});
+    if(t.status==='resolved' || t.status==='snoozed'){ t.status='open'; }
+    t.when=now();
+    toast(`Respuesta enviada por ${CH[t.channel]} a ${t.contact.name}`);
+  }
+  t.unread=false; render();
+}
+
+function simulate(){
+  const t=get(state.sel);
+  const replies = {
+    whatsapp:'¡Perfecto, muchas gracias! 🙌',
+    email:'Muchas gracias por la respuesta. Lo confirmo esta tarde.\n\nUn saludo',
+    instagram:'¡Sí, porfa! Paso a recogerla mañana 🥰',
+    facebook:'¡Genial, gracias!'};
+  const wasClosed = t.status==='snoozed' || t.status==='resolved';
+  t.msgs.push({k:'in', text:replies[t.channel], t:now()});
+  if(wasClosed){ t.msgs.push({k:'sys', text:'Conversación reabierta: el cliente ha vuelto a escribir'}); t.status='open'; }
+  t.when=now(); t.unread=false;
+  // move to top
+  tickets = [t, ...tickets.filter(x=>x!==t)];
+  if(state.tab!=='all' && state.tab!==t.status) state.tab=t.status;
+  render();
+  toast(wasClosed ? `${t.contact.name} ha respondido y el ticket #${t.id} se ha reabierto` : `Nuevo mensaje de ${t.contact.name}`);
+}
+
+/* new ticket modal */
+function openModal(){
+  $('#scrim').hidden=false; $('#f-err').textContent='';
+  $('#f-agent').innerHTML = AGENTS.map(a=>`<option ${a===ME?'selected':''}>${a}</option>`).join('');
+  setNewCh(state.newCh); $('#f-name').focus();
+}
+function closeModal(){ $('#scrim').hidden=true; $('#form').reset(); }
+function setNewCh(ch){
+  state.newCh=ch;
+  $('#chpick').innerHTML = Object.keys(CH).map(c=>`<button type="button" class="${c===ch?'on':''}" data-newch="${c}" aria-pressed="${c===ch}">${ICON[c]}${CH[c]}</button>`).join('');
+  const lab = {email:['Email','ana@ejemplo.com'], whatsapp:['Teléfono','+34 600 000 000'], instagram:['Usuario de Instagram','@usuario'], facebook:['Nombre en Facebook','Ana López']}[ch];
+  $('#f-contact-l').textContent=lab[0]; $('#f-contact').placeholder=lab[1];
+  $('#f-subject-w').hidden = ch!=='email';
+}
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) { if(!e.target.closest('.canned')) { const m=$('#cannedMenu'); if(m) m.hidden=true; } return; }
+  if(b.dataset.tab){ state.tab=b.dataset.tab; render(); return; }
+  if(b.dataset.ch){ const c=b.dataset.ch; state.chans.has(c)?state.chans.delete(c):state.chans.add(c); render(); return; }
+  if(b.dataset.id && !b.disabled){ state.sel=+b.dataset.id; const t=get(state.sel); t.unread=false; state.mode='reply'; state.showSide=false; $('#app').classList.add('show-conv'); render(); return; }
+  if(b.dataset.mode){ state.mode=b.dataset.mode; const v=$('#reply').value; renderConv(); $('#reply').value=v; $('#reply').focus(); return; }
+  if(b.dataset.canned){ const r=$('#reply'); r.value = (r.value ? r.value+'\n' : '') + CANNED[+b.dataset.canned].t; $('#cannedMenu').hidden=true; r.focus(); return; }
+  if(b.dataset.newch){ setNewCh(b.dataset.newch); return; }
+  switch(b.id){
+    case 'newBtn': openModal(); break;
+    case 'cancelBtn': closeModal(); break;
+    case 'sendBtn': send(); break;
+    case 'simBtn': simulate(); break;
+    case 'backBtn': $('#app').classList.remove('show-conv'); break;
+    case 'infoBtn': state.showSide=true; $('#side').classList.add('open'); break;
+    case 'closeSide': state.showSide=false; $('#side').classList.remove('open'); break;
+    case 'cannedBtn': { const m=$('#cannedMenu'); m.hidden=!m.hidden; b.setAttribute('aria-expanded', String(!m.hidden)); break; }
+    case 'resolveBtn': { const t=get(state.sel); t.status='resolved'; t.msgs.push({k:'sys', text:`${ME} ha marcado la conversación como resuelta`}); render(); toast(`Ticket #${t.id} resuelto`); break; }
+    case 'reopenBtn': { const t=get(state.sel); t.status='open'; t.msgs.push({k:'sys', text:`${ME} ha reabierto la conversación`}); state.tab='open'; render(); break; }
+  }
+});
+document.addEventListener('change', e => {
+  const t=get(state.sel);
+  if(e.target.id==='agentSel'){ t.agent=e.target.value; t.msgs.push({k:'sys', text:`${ME} ha asignado la conversación a ${t.agent}`}); render(); toast(`Asignado a ${t.agent}`); }
+  if(e.target.id==='statusSel'){ const v=e.target.value; t.status=v; t.msgs.push({k:'sys', text:`${ME} ha cambiado el estado a ${ST[v]}`}); render(); toast(`Estado: ${ST[v]}`); }
+});
+document.addEventListener('keydown', e => {
+  if(e.key==='Enter' && (e.ctrlKey||e.metaKey) && e.target.id==='reply'){ e.preventDefault(); send(); }
+  if(e.key==='Escape' && !$('#scrim').hidden) closeModal();
+});
+$('#q').addEventListener('input', e => { state.q=e.target.value; renderRows(); });
+$('#scrim').addEventListener('click', e => { if(e.target.id==='scrim') closeModal(); });
+$('#form').addEventListener('submit', e => {
+  e.preventDefault();
+  const ch=state.newCh, name=$('#f-name').value.trim(), contact=$('#f-contact').value.trim(), subject=$('#f-subject').value.trim(), msg=$('#f-msg').value.trim(), agent=$('#f-agent').value;
+  const missing = [!name&&'el nombre', !contact&&$('#f-contact-l').textContent.toLowerCase(), ch==='email'&&!subject&&'el asunto', !msg&&'el mensaje'].filter(Boolean);
+  if(missing.length){ $('#f-err').textContent = 'Falta ' + missing.join(', ') + '.'; return; }
+  if(ch==='email' && !/^\S+@\S+\.\S+$/.test(contact)){ $('#f-err').textContent='El email no parece válido. Revisa que tenga @ y dominio.'; return; }
+  const t = {id:nextId++, channel:ch, status:'open', agent, unread:true, when:now(), subject: ch==='email'?subject:undefined,
+    contact:{name: ch==='instagram' && !name.startsWith('@') ? name : name, email: ch==='email'?contact:'', phone: ch==='whatsapp'?contact:''},
+    labels:[], history:[], msgs:[{k:'in', text:msg, t:now()}, {k:'sys', text:`Ticket creado por ${ME} y asignado a ${agent}`}]};
+  tickets.unshift(t); state.sel=t.id; state.tab='open'; state.chans.clear(); state.q=''; $('#q').value='';
+  closeModal(); $('#app').classList.add('show-conv'); render();
+  toast(`Ticket #${t.id} creado · ${CH[ch]}`);
+});
+
+render();
+</script>
+
+</body>
+</html>
