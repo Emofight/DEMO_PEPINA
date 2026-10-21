@@ -235,7 +235,7 @@ select.sel{border:1px solid var(--line);border-radius:10px;padding:7px 10px;back
     <button title="Clientes" aria-label="Clientes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/></svg></button>
     <button title="Informes" aria-label="Informes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg></button>
     <div class="spacer"></div>
-    <div class="me" title="Marta (administradora)">M</div>
+    <div class="me" title="Edurne (administradora)">E</div>
   </nav>
 
   <section class="list" aria-label="Lista de conversaciones">
@@ -283,8 +283,8 @@ const ICON = {
 };
 const CH = {email:'Email', whatsapp:'WhatsApp', instagram:'Instagram', facebook:'Facebook'};
 const ST = {open:'Abierto', pending:'Pendiente', snoozed:'Pospuesto', resolved:'Resuelto'};
-const AGENTS = ['Marta','Lucía','Andrés'];
-const ME = 'Marta';
+const AGENTS = ['Edurne','Lucía','Andrés'];
+const ME = 'Edurne';
 const CANNED = [
   {k:'Horario', t:'Nuestro horario es de lunes a sábado, de 9:00 a 14:00 y de 17:00 a 20:30. Los domingos abrimos de 9:00 a 14:00.'},
   {k:'Alérgenos', t:'Todas nuestras tartas indican sus alérgenos. Tenemos opciones sin gluten (chocolate y limón) y sin lactosa bajo encargo con 48 horas de antelación.'},
@@ -294,7 +294,7 @@ const AV_COLORS = ['#899E9A','#A47A52','#5F7672','#8A6A8E','#6E8A5A','#B07A54'];
 
 let nextId = 1031;
 let tickets = [
-  {id:1030, channel:'whatsapp', status:'open', agent:'Marta', unread:true, when:'10:42',
+  {id:1030, channel:'whatsapp', status:'open', agent:'Edurne', unread:true, when:'10:42',
    contact:{name:'Carmen Ruiz', phone:'+34 612 345 678', email:'carmen.ruiz@ejemplo.com'}, labels:['Sin gluten','Cliente habitual'],
    history:[1012, 1005],
    msgs:[
@@ -314,14 +314,14 @@ let tickets = [
     {k:'in', text:'Holaa, ¿qué precio tiene la tarta de frambuesa que habéis subido hoy? 😍', t:'09:51'},
     {k:'out', text:'¡Hola Ana! La de frambuesa y pistacho cuesta 32 € (8 raciones). ¿Quieres que te la reservemos?', t:'09:58', by:'Andrés'},
    ]},
-  {id:1027, channel:'email', status:'pending', agent:'Marta', unread:false, when:'Ayer',
+  {id:1027, channel:'email', status:'pending', agent:'Edurne', unread:false, when:'Ayer',
    subject:'Pedido nº 2045: cambio de fecha de recogida',
    contact:{name:'Javier Martín', email:'javier.martin@ejemplo.com', phone:'+34 655 210 984'}, labels:['Pedido'],
    history:[1009],
    msgs:[
     {k:'in', text:'Buenas tardes,\n\nTengo el pedido nº 2045 para recoger el jueves. ¿Sería posible pasarlo al viernes por la mañana?\n\nUn saludo,\nJavier', t:'Ayer 18:20'},
-    {k:'out', text:'Hola Javier,\n\nLo consultamos con el obrador y te confirmamos mañana a primera hora.\n\nUn saludo,\nMarta · Pepina Pastel', t:'Ayer 18:41', by:'Marta'},
-    {k:'note', text:'Preguntar a Rosa si el viernes hay hueco en el horno para la de 3 pisos.', t:'Ayer 18:42', by:'Marta'},
+    {k:'out', text:'Hola Javier,\n\nLo consultamos con el obrador y te confirmamos mañana a primera hora.\n\nUn saludo,\nEdurne · Pepina Pastel', t:'Ayer 18:41', by:'Edurne'},
+    {k:'note', text:'Preguntar a Rosa si el viernes hay hueco en el horno para la de 3 pisos.', t:'Ayer 18:42', by:'Edurne'},
    ]},
   {id:1026, channel:'whatsapp', status:'snoozed', agent:'Lucía', unread:false, when:'Ayer',
    contact:{name:'Pedro Alonso', phone:'+34 699 874 112', email:''}, labels:[],
@@ -339,14 +339,14 @@ let tickets = [
     {k:'out', text:'¡Hola Isabel! Sí, los domingos abrimos de 9:00 a 14:00. ¡Te esperamos!', t:'Lun 20:30', by:'Andrés'},
     {k:'sys', text:'Andrés ha marcado la conversación como resuelta'},
    ]},
-  {id:1024, channel:'email', status:'resolved', agent:'Marta', unread:false, when:'Lun',
+  {id:1024, channel:'email', status:'resolved', agent:'Edurne', unread:false, when:'Lun',
    subject:'Factura del pedido de la comunión',
    contact:{name:'Elena Sanz', email:'elena.sanz@ejemplo.com', phone:''}, labels:['Factura'],
    history:[],
    msgs:[
     {k:'in', text:'Hola, ¿me podéis enviar la factura del pedido del sábado? Necesito que salga a nombre de la empresa.\n\nGracias,\nElena', t:'Lun 11:02'},
-    {k:'out', text:'Hola Elena,\n\nTe adjuntamos la factura a nombre de tu empresa. Cualquier cosa, aquí estamos.\n\nUn saludo,\nMarta · Pepina Pastel', t:'Lun 11:30', by:'Marta'},
-    {k:'sys', text:'Marta ha marcado la conversación como resuelta'},
+    {k:'out', text:'Hola Elena,\n\nTe adjuntamos la factura a nombre de tu empresa. Cualquier cosa, aquí estamos.\n\nUn saludo,\nEdurne · Pepina Pastel', t:'Lun 11:30', by:'Edurne'},
+    {k:'sys', text:'Edurne ha marcado la conversación como resuelta'},
    ]},
 ];
 const OLD = {
